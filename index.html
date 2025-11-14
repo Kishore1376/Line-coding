@@ -42,6 +42,7 @@
           <li>Manchester Encoding</li>
           <li>Duo Binary Encoding</li>
           <li>HDB3 (High Density Bipolar of order 3)</li>
+          <li>B8ZS (Bipolar with 8-Zero Substitution)</li>
         </ul>
         <p>The experiment aims to help students:</p>
         <ul>
@@ -139,6 +140,17 @@
           <li>No DC component</li>
           <li>Used in E1 carrier systems</li>
         </ul>
+
+        <h3>9. B8ZS (Bipolar with 8-Zero Substitution)</h3>
+        <p>B8ZS is an enhanced version of AMI that replaces eight consecutive zeros with a special pattern containing bipolar violations. These intentional violations help maintain synchronization and eliminate long zero sequences in T1 systems.</p>
+        <p><strong>Characteristics:</strong></p>
+        <ul>
+          <li>Replaces any sequence of 00000000 with a predefined violation pattern</li>
+          <li>Ensures frequent transitions for synchronization</li>
+          <li>No DC component</li>
+          <li>Used in T1 systems (North America, Japan)</li>
+          <li>Violation patterns depend on polarity of previous mark</li>
+        </ul>
       </div>
     </div>
 
@@ -172,6 +184,7 @@
           <li><strong>Manchester:</strong> View Manchester encoding</li>
           <li><strong>Duo Binary:</strong> View duo binary encoding</li>
           <li><strong>HDB3:</strong> View HDB3 encoding</li>
+          <li><strong>B8ZS:</strong> View B8ZS encoding</li>
         </ul>
         
         <h3>Step 6: Adjust Control Parameters</h3>
@@ -458,6 +471,17 @@
           <li>Used in E1 telecommunication systems</li>
         </ul>
         
+        <h3>9. B8ZS</h3>
+        <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V (with substitution violations)</p>
+        <p><strong>Observations:</strong></p>
+        <ul>
+          <li>Replaces any 8 consecutive zeros with a violation pattern</li>
+          <li>Introduces two balancing and two violation pulses</li>
+          <li>Maintains synchronization even for long sequences of zeros</li>
+          <li>No DC component</li>
+          <li>Used in T1 carrier systems</li>
+        </ul>
+
         <h3>Comparison Summary</h3>
         <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
           <thead>
@@ -517,6 +541,13 @@
               <td style="border: 1px solid #ddd; padding: 8px;">Good</td>
               <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
             </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;">B8ZS</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">Good</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
+            </tr>
+
           </tbody>
         </table>
         
