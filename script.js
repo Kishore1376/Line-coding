@@ -629,21 +629,26 @@ function drawOscilloscope() {
 
   if (!isScopeConnected()) {
 
-      // Hide the big oscilloscope area completely
-      if (scopeDisplay) scopeDisplay.style.display = "none";
+    // hide with transitions
+    fadeHide(scopeDisplay);
+    scaleHide(controlsSection);
+    scaleHide(channelSelector);
+    fadeHide(inputSection);
 
-      // Hide knobs
-      if (controlsSection) controlsSection.style.display = "none";
+    Plotly.purge('oscilloscope');
 
-      // Hide channel buttons
-      if (channelSelector) channelSelector.style.display = "none";
+    // also hide PSD when scope is disconnected
+    const psdSection = document.getElementById('psdSection');
+    if (psdSection) {
+        slideHide(psdSection);
+        psdSection.style.display = 'none';
+        Plotly.purge('theoryPSD');
+        Plotly.purge('practicalPSD');
+    }
 
-      // Dim input + disable generate
-      if (inputSection) inputSection.style.opacity = "0.4";
+    return;
+}
 
-      Plotly.purge('oscilloscope');
-      return;
-  }
 
   // --- IF CONNECTED, SHOW EVERYTHING NORMAL ---
   if (scopeDisplay) scopeDisplay.style.display = "block";
@@ -1549,3 +1554,4 @@ document.addEventListener('click', (e) => {
     }, 50);
   }
 });
+
