@@ -186,6 +186,66 @@ body {
   background: #e55500;
 }
 
+/* =======================
+   GLOBAL TRANSITIONS
+======================= */
+.fade {
+  opacity: 1;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.fade-hidden {
+  opacity: 0;
+  transform: scale(0.97);
+  pointer-events: none;
+}
+
+.slide {
+  overflow: hidden;
+  max-height: 800px;
+  opacity: 1;
+  transition: max-height 0.45s ease, opacity 0.35s ease;
+}
+.slide-hidden {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scale {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.scale-hidden {
+  opacity: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+}
+
+/* =======================
+   BLOCK DRAGGING ANIMATION
+======================= */
+.diagram-block {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.diagram-block.dragging {
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* =======================
+   ARROW LINE ANIMATIONS
+======================= */
+.arrow-line {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: drawLine 0.4s forwards ease-out;
+}
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+
 .oscilloscope {
   background: white;
   padding: 20px;
