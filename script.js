@@ -628,8 +628,6 @@ function drawOscilloscope() {
   const inputSection = document.querySelector('.input-section');
 
   if (!isScopeConnected()) {
-
-    // hide with transitions
     fadeHide(scopeDisplay);
     scaleHide(controlsSection);
     scaleHide(channelSelector);
@@ -637,10 +635,9 @@ function drawOscilloscope() {
 
     Plotly.purge('oscilloscope');
 
-    // also hide PSD when scope is disconnected
+    // ALSO hide PSD completely
     const psdSection = document.getElementById('psdSection');
     if (psdSection) {
-        slideHide(psdSection);
         psdSection.style.display = 'none';
         Plotly.purge('theoryPSD');
         Plotly.purge('practicalPSD');
@@ -648,6 +645,7 @@ function drawOscilloscope() {
 
     return;
 }
+
 
 
   // --- IF CONNECTED, SHOW EVERYTHING NORMAL ---
@@ -1554,4 +1552,5 @@ document.addEventListener('click', (e) => {
     }, 50);
   }
 });
+
 
