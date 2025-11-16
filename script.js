@@ -628,24 +628,24 @@ function drawOscilloscope() {
   const inputSection = document.querySelector('.input-section');
 
   if (!isScopeConnected()) {
-    fadeHide(scopeDisplay);
-    scaleHide(controlsSection);
-    scaleHide(channelSelector);
-    fadeHide(inputSection);
 
-    Plotly.purge('oscilloscope');
+    const oscilloscopeBox = document.querySelector('.oscilloscope');
+    const scopeDisplay = document.querySelector('.scope-display');
+    const controlsSection = document.querySelector('.controls-section');
+    const channelSelector = document.querySelector('.channel-selector');
+    const inputSection = document.querySelector('.input-section');
 
-    // ALSO hide PSD completely
-    const psdSection = document.getElementById('psdSection');
-    if (psdSection) {
-        psdSection.style.display = 'none';
-        Plotly.purge('theoryPSD');
-        Plotly.purge('practicalPSD');
-    }
+    if (oscilloscopeBox) oscilloscopeBox.style.display = "none";
+    if (scopeDisplay) scopeDisplay.style.display = "none";
+    if (controlsSection) controlsSection.style.display = "none";
+    if (channelSelector) channelSelector.style.display = "none";
+    if (inputSection) inputSection.style.opacity = "0.4";
 
+    Plotly.purge("oscilloscope");
     return;
-}
-
+  }
+    const oscilloscopeBox = document.querySelector('.oscilloscope');
+    if (oscilloscopeBox) oscilloscopeBox.style.display = "block";
 
 
   // --- IF CONNECTED, SHOW EVERYTHING NORMAL ---
@@ -1552,5 +1552,6 @@ document.addEventListener('click', (e) => {
     }, 50);
   }
 });
+
 
 
