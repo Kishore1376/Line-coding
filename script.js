@@ -194,7 +194,7 @@ let currentChannel = 0;
 let binaryInput = '10110100';
 
 let channelSettings = [];
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 11; i++) {
   channelSettings.push({
     bitsShown: 8,
     amplitude: 5
@@ -496,6 +496,25 @@ function generateB8ZS(bits, amp) {
   return signal;
 }
 
+function generatePseudoTernary(bits, amp) {
+  const a = parseFloat(amp);
+  let signal = [];
+  let lastZeroState = a; // Tracks alternating states for binary 0: starts with +V
+  
+  bits.split('').forEach(bit => {
+    if (bit === '1') {
+      // Binary 1: 0V
+      signal.push(0);
+    } else {
+      // Binary 0: Alternates between +V and -V
+      signal.push(lastZeroState);
+      lastZeroState = -lastZeroState; // Toggle for next zero
+    }
+  });
+  
+  return signal;
+}
+
 function generateInputSignal(bits) {
   return bits.split('').map(bit => bit === '1' ? 5 : 0);
 }
@@ -534,6 +553,7 @@ function drawOscilloscope() {
       case 7: encodedSignal = generateDuoBinary(bits, settings.amplitude); break;
       case 8: encodedSignal = generateHDB3(bits, settings.amplitude); break;
       case 9: encodedSignal = generateB8ZS(bits, settings.amplitude); break;
+      case 10: encodedSignal = generatePseudoTernary(bits, settings.amplitude); break;
     }
   }
 
@@ -749,6 +769,52 @@ if (encodedSignal) {
 
   // Polar NRZ and HDB3 transitions
   if ([3, 8].includes(currentChannel)) {
+    for (let i = 0; i < encodedSignal.length - 1; i++) {
+      const left = encodedSignal[i];
+      const right = encodedSignal[i + 1];
+      if (left !== right) {
+        const arrowSymbol = left > right ? '↓' : '↑';
+        const xPos = i + 1;
+        const yPos = (left + right) / 2;
+        annotations.push({
+          x: xPos,
+          y: yPos,
+          xref: 'x',
+          yref: 'y2',
+          text: arrowSymbol,
+          showarrow: false,
+          font: { color: arrowColor, size: 18, family: 'monospace' },
+          align: 'center'
+        });
+      }
+    }
+  }
+
+  // B8ZS transitions (show arrows at any level change)
+  if (currentChannel === 9) {
+    for (let i = 0; i < encodedSignal.length - 1; i++) {
+      const left = encodedSignal[i];
+      const right = encodedSignal[i + 1];
+      if (left !== right) {
+        const arrowSymbol = left > right ? '↓' : '↑';
+        const xPos = i + 1;
+        const yPos = (left + right) / 2;
+        annotations.push({
+          x: xPos,
+          y: yPos,
+          xref: 'x',
+          yref: 'y2',
+          text: arrowSymbol,
+          showarrow: false,
+          font: { color: arrowColor, size: 18, family: 'monospace' },
+          align: 'center'
+        });
+      }
+    }
+  }
+
+  // Pseudo Ternary transitions
+  if (currentChannel === 10) {
     for (let i = 0; i < encodedSignal.length - 1; i++) {
       const left = encodedSignal[i];
       const right = encodedSignal[i + 1];
