@@ -277,6 +277,10 @@
             Virtual Oscilloscope
             <div class="connection-point input" data-block="oscilloscope" data-type="input"></div>
           </div>
+          <div class="diagram-block" data-id="psd" style="left: 950px; top: 170px;">
+            Power Spectral Density
+            <div class="connection-point input" data-block="psd" data-type="input"></div>
+          </div>
         </div>
         <div class="controls-info">
           <p><strong>Instructions:</strong></p>
@@ -300,9 +304,8 @@
             <button class="channel-btn" onclick="selectChannel(3)">Polar NRZ</button>
             <button class="channel-btn" onclick="selectChannel(4)">Polar RZ</button>
             <button class="channel-btn" onclick="selectChannel(5)">Bipolar AMI</button>
-            <button class="channel-btn" onclick="selectChannel(10)">Pseudo Ternary</button>
-            <button class="channel-btn" onclick="selectChannel(6)">Manchester</button>
-            <button class="channel-btn" onclick="selectChannel(7)">Duo Binary</button>
+            <button class="channel-btn" onclick="selectChannel(6)">Pseudo Ternary</button>
+            <button class="channel-btn" onclick="selectChannel(7)">Manchester</button>
             <button class="channel-btn" onclick="selectChannel(8)">HDB3</button>
             <button class="channel-btn" onclick="selectChannel(9)">B8ZS</button>
             
@@ -312,7 +315,32 @@
         <div class="scope-display">
           <div id="oscilloscope"></div>
         </div>
+        <!-- PSD section (hidden until PSD block is connected) -->
+        <div id="psdSection" style="display:none; margin-top: 30px;">
 
+          <h2 style="color:white; text-align:center; margin-bottom:20px;">
+            Power Spectral Density Analysis
+          </h2>
+
+          <div style="display:flex; gap:20px; justify-content:center;">
+
+            <!-- LEFT: THEORETICAL PSD -->
+            <div style="width:48%; background:#111; padding:15px; border-radius:10px;">
+              <h3 style="color:#4ec9ff; text-align:center;">Theoretical PSD</h3>
+              <div id="theoryPSD"></div>
+            </div>
+
+            <!-- RIGHT: PRACTICAL PSD -->
+            <div style="width:48%; background:#111; padding:15px; border-radius:10px;">
+              <h3 style="color:#ffcc66; text-align:center;">Practical PSD (FFT)</h3>
+              <div id="practicalPSD"></div>
+            </div>
+
+          </div>
+
+        </div>
+
+ 
         <div class="controls-section">
           <div class="control-group">
             <h3>Bit Rate (bits shown)</h3>
