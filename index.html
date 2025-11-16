@@ -39,6 +39,7 @@
           <li>Polar NRZ</li>
           <li>Polar RZ</li>
           <li>Bipolar AMI (Alternate Mark Inversion)</li>
+          <li>Pseudo Ternary Encoding</li>
           <li>Manchester Encoding</li>
           <li>Duo Binary Encoding</li>
           <li>HDB3 (High Density Bipolar of order 3)</li>
@@ -60,8 +61,8 @@
         <h2>Theory</h2>
         
         <h3>Introduction to Line Coding</h3>
-        <p><strong>Line Coding</strong> is the process of converting digital data (binary sequences of 0s and 1s) into digital signals suitable for transmission over a communication channel. The choice of line coding scheme affects bandwidth requirements, synchronization capability, error detection, and DC component of the signal.</p>
-        
+        <p><strong>Line Coding</strong> is the process of converting digital data (binary sequences of 0s and 1s) into digital signals suitable for transmission over a communication channel. The choice of line coding scheme affects bandwidth requirements, synchronization capability, error detection, and DC component of the signal.We need line coding techniques because raw digital data cannot be sent directly; it must be shaped into a suitable signal. Line coding ensures reliable transmission, maintains synchronization between the transmitter and receiver, reduces errors and noise, optimizes bandwidth usage, and in some cases even supports error detection. All these factors make digital communication accurate and robust.
+        </p>
         <h3>Classification of Line Coding Schemes</h3>
         
         <h3>1. Unipolar NRZ (Non-Return to Zero)</h3>
@@ -111,8 +112,24 @@
           <li>Better bandwidth utilization</li>
           <li>Problem with long sequences of zeros</li>
         </ul>
-        
-        <h3>6. Manchester Encoding</h3>
+
+        <h3>6. Pseudo Ternary</h3>
+        <p>Pseudo Ternary is a modified encoding scheme where the roles of 1s and 0s are reversed compared to AMI. Binary 1 is represented by 0V (zero voltage), while binary 0 alternates between positive voltage (+V) and negative voltage (-V).</p>
+        <p><strong>Logic:</strong></p>
+        <ul>
+          <li><strong>Binary 1:</strong> 0V (No pulse)</li>
+          <li><strong>Binary 0:</strong> Alternates between +V and -V</li>
+        </ul>
+        <p><strong>Characteristics:</strong></p>
+        <ul>
+          <li>Uses three voltage levels (+V, 0V, -V)</li>
+          <li>No DC component for balanced data</li>
+          <li>Good for long sequences of 1s (represented as no pulse)</li>
+          <li>Better synchronization for data with many 0s</li>
+          <li>Inverse representation of Bipolar AMI</li>
+        </ul>
+
+        <h3>7. Manchester Encoding</h3>
         <p>Also known as bi-phase encoding. Logic 1 is represented by a transition from low to high in the middle of the bit period. Logic 0 is represented by a transition from high to low.</p>
         <p><strong>Characteristics:</strong></p>
         <ul>
@@ -122,7 +139,7 @@
           <li>Requires twice the bandwidth</li>
         </ul>
         
-        <h3>7. Duo Binary Encoding</h3>
+        <h3>8. Duo Binary Encoding</h3>
         <p>A form of partial response signaling where the current bit value depends on the current input and previous encoded output. Uses correlation between adjacent bits.</p>
         <p><strong>Characteristics:</strong></p>
         <ul>
@@ -131,7 +148,7 @@
           <li>Three voltage levels</li>
         </ul>
         
-        <h3>8. HDB3 (High Density Bipolar of order 3)</h3>
+        <h3>9. HDB3 (High Density Bipolar of order 3)</h3>
         <p>An improvement over AMI that prevents long sequences of zeros. When four consecutive zeros occur, they are replaced by a special code that includes a violation (same polarity as previous 1).</p>
         <p><strong>Characteristics:</strong></p>
         <ul>
@@ -139,17 +156,24 @@
           <li>Maintains synchronization</li>
           <li>No DC component</li>
           <li>Used in E1 carrier systems</li>
+          <li>Case 1: Even number of pulses since last violation → use B00V</li>
+          <li>Case 2: Odd number of pulses since last violation → use 000V</li>
         </ul>
+        
+        <h3>10. B8ZS (Bipolar with 8-Zero Substitution)</h3>
+        <p>A line coding method used mainly in North America to solve the problem of long sequences of zeros in AMI. When eight consecutive zeros (00000000) occur, they are replaced with a special pattern <strong>000VB0BV</strong> (appearing inside the 8-zero block), where <strong>V</strong> represents a bipolar violation and <strong>B</strong> represents a balancing pulse.</p>
+        <p><strong>Substitution Pattern:</strong></p>
+        <p>The 8 zeros <strong>00000000</strong> are replaced with:  
+        <strong>000VB0BV</strong><br>
+        • <strong>B</strong> = Balancing pulse (same polarity as expected alternate pulse)<br>
+        • <strong>V</strong> = Violation pulse (same polarity as previous pulse)</p>
 
-        <h3>9. B8ZS (Bipolar with 8-Zero Substitution)</h3>
-        <p>B8ZS is an enhanced version of AMI that replaces eight consecutive zeros with a special pattern containing bipolar violations. These intentional violations help maintain synchronization and eliminate long zero sequences in T1 systems.</p>
         <p><strong>Characteristics:</strong></p>
         <ul>
-          <li>Replaces any sequence of 00000000 with a predefined violation pattern</li>
-          <li>Ensures frequent transitions for synchronization</li>
-          <li>No DC component</li>
-          <li>Used in T1 systems (North America, Japan)</li>
-          <li>Violation patterns depend on polarity of previous mark</li>
+          <li>Replaces long sequences of 8 zeros</li>
+          <li>The pattern 000VB0BV maintains synchronization</li>
+          <li>Has no DC component</li>
+          <li>Widely used in T1 carrier systems</li>
         </ul>
       </div>
     </div>
@@ -184,7 +208,7 @@
           <li><strong>Manchester:</strong> View Manchester encoding</li>
           <li><strong>Duo Binary:</strong> View duo binary encoding</li>
           <li><strong>HDB3:</strong> View HDB3 encoding</li>
-          <li><strong>B8ZS:</strong> View B8ZS encoding</li>
+          <li><strong>Pseudo Ternary:</strong> View pseudo ternary encoding</li>
         </ul>
         
         <h3>Step 6: Adjust Control Parameters</h3>
@@ -276,10 +300,12 @@
             <button class="channel-btn" onclick="selectChannel(3)">Polar NRZ</button>
             <button class="channel-btn" onclick="selectChannel(4)">Polar RZ</button>
             <button class="channel-btn" onclick="selectChannel(5)">Bipolar AMI</button>
+            <button class="channel-btn" onclick="selectChannel(10)">Pseudo Ternary</button>
             <button class="channel-btn" onclick="selectChannel(6)">Manchester</button>
             <button class="channel-btn" onclick="selectChannel(7)">Duo Binary</button>
             <button class="channel-btn" onclick="selectChannel(8)">HDB3</button>
             <button class="channel-btn" onclick="selectChannel(9)">B8ZS</button>
+            
           </div>
         </div>
 
@@ -439,8 +465,19 @@
           <li>Simple error detection capability</li>
           <li>Problem with long sequences of zeros</li>
         </ul>
+
+        <h3>6. Pseudo Ternary</h3>
+        <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V (alternating for 1s)</p>
+        <p><strong>Observations:</strong></p>
+        <ul>
+          <li>Logic 0s alternate between positive and negative</li>
+          <li>Logic 1s are represented by 0V (no pulse)</li>
+          <li>No DC component</li>
+          <li>Similar to AMI, but 1s and 0s are swapped</li>
+          <li>Used where 1s occur more frequently than 0s</li>
+        </ul>
         
-        <h3>6. Manchester Encoding</h3>
+        <h3>7. Manchester Encoding</h3>
         <p><strong>Voltage Levels Used:</strong> +V and -V (with mid-bit transitions)</p>
         <p><strong>Observations:</strong></p>
         <ul>
@@ -451,7 +488,7 @@
           <li>Used in Ethernet networks</li>
         </ul>
         
-        <h3>7. Duo Binary</h3>
+        <h3>8. Duo Binary</h3>
         <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V</p>
         <p><strong>Observations:</strong></p>
         <ul>
@@ -460,7 +497,7 @@
           <li>Three voltage levels</li>
         </ul>
         
-        <h3>8. HDB3</h3>
+        <h3>9. HDB3</h3>
         <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V (with violation codes)</p>
         <p><strong>Observations:</strong></p>
         <ul>
@@ -471,17 +508,17 @@
           <li>Used in E1 telecommunication systems</li>
         </ul>
         
-        <h3>9. B8ZS</h3>
-        <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V (with substitution violations)</p>
+        <h3>10. B8ZS</h3>
+        <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V (with substitution codes)</p>
+        <p>Special substitution 000VB0BV when 8 zeros occur</p>
         <p><strong>Observations:</strong></p>
         <ul>
-          <li>Replaces any 8 consecutive zeros with a violation pattern</li>
-          <li>Introduces two balancing and two violation pulses</li>
-          <li>Maintains synchronization even for long sequences of zeros</li>
+          <li>Substitutes eight consecutive zeros with a special pattern</li>
+          <li>Maintains synchronization</li>
           <li>No DC component</li>
-          <li>Used in T1 carrier systems</li>
+          <li>Introduces B (balancing pulse) and V (violation pulse)</li>
         </ul>
-
+        
         <h3>Comparison Summary</h3>
         <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
           <thead>
@@ -524,6 +561,12 @@
               <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
             </tr>
             <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;">Pseudo Ternary</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">Poor</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">Low</td>
+            </tr>
+            <tr>
               <td style="border: 1px solid #ddd; padding: 8px;">Manchester</td>
               <td style="border: 1px solid #ddd; padding: 8px;">No</td>
               <td style="border: 1px solid #ddd; padding: 8px;">Excellent</td>
@@ -544,10 +587,9 @@
             <tr>
               <td style="border: 1px solid #ddd; padding: 8px;">B8ZS</td>
               <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Good</td>
+              <td style="border: 1px solid #ddd; padding: 8px;">Excellent</td>
               <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
             </tr>
-
           </tbody>
         </table>
         
