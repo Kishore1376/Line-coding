@@ -289,6 +289,20 @@ body {
   flex-wrap: wrap;
 }
 
+/* Compare controls */
+#compareControls {
+  display: none;
+  align-items: center;
+}
+
+.compare-select {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #2d2d6c;
+  background: #ffffff;
+  color: #222;
+}
+
 .channel-btn {
   background: #3d3d8c;
   color: white;
@@ -635,4 +649,40 @@ body {
   margin-top: 15px;
   text-align: left;
   color: #3d3d8c;
+}
+/* Fade Animation */
+.fade {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+.fade-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Scale Animation */
+.scale {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.scale-hidden {
+  transform: scale(0.8);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Slide Animation (if needed later) */
+.slide {
+  transform: translateY(0);
+  opacity: 1;
+  transition: 0.4s ease;
+}
+
+.slide-hidden {
+  transform: translateY(20px);
+  opacity: 0;
+  pointer-events: none;
 }
