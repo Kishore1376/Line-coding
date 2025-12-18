@@ -41,7 +41,6 @@
           <li>Bipolar AMI (Alternate Mark Inversion)</li>
           <li>Pseudo Ternary Encoding</li>
           <li>Manchester Encoding</li>
-          <li>Duo Binary Encoding</li>
           <li>HDB3 (High Density Bipolar of order 3)</li>
           <li>B8ZS (Bipolar with 8-Zero Substitution)</li>
         </ul>
@@ -139,16 +138,7 @@
           <li>Requires twice the bandwidth</li>
         </ul>
         
-        <h3>8. Duo Binary Encoding</h3>
-        <p>A form of partial response signaling where the current bit value depends on the current input and previous encoded output. Uses correlation between adjacent bits.</p>
-        <p><strong>Characteristics:</strong></p>
-        <ul>
-          <li>Better spectral efficiency</li>
-          <li>Reduced intersymbol interference</li>
-          <li>Three voltage levels</li>
-        </ul>
-        
-        <h3>9. HDB3 (High Density Bipolar of order 3)</h3>
+        <h3>8. HDB3 (High Density Bipolar of order 3)</h3>
         <p>An improvement over AMI that prevents long sequences of zeros. When four consecutive zeros occur, they are replaced by a special code that includes a violation (same polarity as previous 1).</p>
         <p><strong>Characteristics:</strong></p>
         <ul>
@@ -160,7 +150,7 @@
           <li>Case 2: Odd number of pulses since last violation → use 000V</li>
         </ul>
         
-        <h3>10. B8ZS (Bipolar with 8-Zero Substitution)</h3>
+        <h3>9. B8ZS (Bipolar with 8-Zero Substitution)</h3>
         <p>A line coding method used mainly in North America to solve the problem of long sequences of zeros in AMI. When eight consecutive zeros (00000000) occur, they are replaced with a special pattern <strong>000VB0BV</strong> (appearing inside the 8-zero block), where <strong>V</strong> represents a bipolar violation and <strong>B</strong> represents a balancing pulse.</p>
         <p><strong>Substitution Pattern:</strong></p>
         <p>The 8 zeros <strong>00000000</strong> are replaced with:  
@@ -206,7 +196,6 @@
           <li><strong>Polar RZ:</strong> View polar return-to-zero encoding</li>
           <li><strong>Bipolar AMI:</strong> View alternate mark inversion encoding</li>
           <li><strong>Manchester:</strong> View Manchester encoding</li>
-          <li><strong>Duo Binary:</strong> View duo binary encoding</li>
           <li><strong>HDB3:</strong> View HDB3 encoding</li>
           <li><strong>Pseudo Ternary:</strong> View pseudo ternary encoding</li>
         </ul>
@@ -287,6 +276,8 @@
           <p>• Drag blocks to reposition them</p>
           <p>• Click and drag from orange output points (right) to input points (left) to create arrows</p>
           <p>• Click on arrows to delete them</p>
+          <p>• Use the reset button to restore default positions and clear connections</p>
+          <p>• For HDB3 and B8ZS input more number of zeros</p>
         </div>
         <button class="reset-btn" onclick="resetDiagram()">Reset Diagram</button>
       </div>
@@ -308,7 +299,40 @@
             <button class="channel-btn" onclick="selectChannel(7)">Manchester</button>
             <button class="channel-btn" onclick="selectChannel(8)">HDB3</button>
             <button class="channel-btn" onclick="selectChannel(9)">B8ZS</button>
+            <button class="channel-btn" id="compareBtn" onclick="enterCompareMode()">COMPARE</button>
             
+          </div>
+          <!-- Compare controls (hidden until COMPARE pressed) -->
+          <div id="compareControls" style="display:none; width:100%; margin-top:12px; gap:10px; align-items:center;">
+            <label style="color:#3d3d8c; margin-right:8px; font-weight:bold;">Compare:</label>
+            <select id="compareSelectA" class="compare-select" onchange="drawOscilloscope()">
+              <option value="1">Unipolar NRZ</option>
+              <option value="2">Unipolar RZ</option>
+              <option value="3">Polar NRZ</option>
+              <option value="4">Polar RZ</option>
+              <option value="5">Bipolar AMI</option>
+              <option value="6">Pseudo Ternary</option>
+              <option value="7">Manchester</option>
+              <option value="8">HDB3</option>
+              <option value="9">B8ZS</option>
+            </select>
+
+            <span style="color:#fff; font-weight:bold; margin:0 6px;">vs</span>
+
+            <select id="compareSelectB" class="compare-select" onchange="drawOscilloscope()">
+              <option value="1">Unipolar NRZ</option>
+              <option value="2">Unipolar RZ</option>
+              <option value="3">Polar NRZ</option>
+              <option value="4">Polar RZ</option>
+              <option value="5">Bipolar AMI</option>
+              <option value="6">Pseudo Ternary</option>
+              <option value="7">Manchester</option>
+              <option value="8">HDB3</option>
+              <option value="9">B8ZS</option>
+            </select>
+
+            <button class="channel-btn" onclick="showCompare()" style="margin-left:8px;">Show Compare</button>
+            <button class="channel-btn" onclick="closeCompare()" style="background:#aa2d2d;">Close</button>
           </div>
         </div>
 
@@ -515,17 +539,8 @@
           <li>Requires double bandwidth</li>
           <li>Used in Ethernet networks</li>
         </ul>
-        
-        <h3>8. Duo Binary</h3>
-        <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V</p>
-        <p><strong>Observations:</strong></p>
-        <ul>
-          <li>Uses correlation between adjacent bits</li>
-          <li>Better spectral efficiency</li>
-          <li>Three voltage levels</li>
-        </ul>
-        
-        <h3>9. HDB3</h3>
+        <h3>
+        <h3>8. HDB3</h3>
         <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V (with violation codes)</p>
         <p><strong>Observations:</strong></p>
         <ul>
@@ -536,7 +551,7 @@
           <li>Used in E1 telecommunication systems</li>
         </ul>
         
-        <h3>10. B8ZS</h3>
+        <h3>9. B8ZS</h3>
         <p><strong>Voltage Levels Used:</strong> +V, 0V, and -V (with substitution codes)</p>
         <p>Special substitution 000VB0BV when 8 zeros occur</p>
         <p><strong>Observations:</strong></p>
@@ -546,87 +561,11 @@
           <li>No DC component</li>
           <li>Introduces B (balancing pulse) and V (violation pulse)</li>
         </ul>
-        
-        <h3>Comparison Summary</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-          <thead>
-            <tr style="background: #3d3d8c; color: white;">
-              <th style="border: 1px solid #ddd; padding: 10px;">Scheme</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">DC Component</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Synchronization</th>
-              <th style="border: 1px solid #ddd; padding: 10px;">Bandwidth</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Unipolar NRZ</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Yes</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Poor</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Low</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Unipolar RZ</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Yes</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Good</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">High</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Polar NRZ</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Poor</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Low</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Polar RZ</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Good</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">High</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Bipolar AMI</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Poor</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Pseudo Ternary</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Poor</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Low</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Manchester</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Excellent</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">High</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">Duo Binary</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Good</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">HDB3</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Good</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">B8ZS</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">No</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Excellent</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Medium</td>
-            </tr>
-          </tbody>
-        </table>
-        
         <h3>Conclusion</h3>
         <p>Successfully studied and analyzed various line coding schemes. Each scheme has its own advantages and applications in digital communication systems. The choice of line coding depends on factors like bandwidth availability, synchronization requirements, DC component tolerance, and error detection needs.</p>
       </div>
     </div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
