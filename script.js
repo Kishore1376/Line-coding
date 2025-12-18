@@ -131,36 +131,48 @@ document.querySelectorAll('.connection-point').forEach(point => {
 });
 
 function updateConnections() {
-  svg.querySelectorAll('.arrow-line:not([data-temp])').forEach(line => line.remove());
-  
-  connections.forEach((conn, index) => {
-    const startBlock = document.querySelector(`[data-id="${conn.start.block}"]`);
-    const endBlock = document.querySelector(`[data-id="${conn.end.block}"]`);
-    
-    if (!startBlock || !endBlock) return;
-    
-    const startPoint = getConnectionPointPosition(startBlock, conn.start.type);
-    const endPoint = getConnectionPointPosition(endBlock, conn.end.type);
-    
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('class', 'arrow-line');
-    line.setAttribute('x1', startPoint.x);
-    line.setAttribute('y1', startPoint.y);
-    line.setAttribute('x2', endPoint.x);
-    line.setAttribute('y2', endPoint.y);
-    line.style.cursor = 'pointer';
-    line.dataset.index = index;
-    
-    line.addEventListener('click', () => {
-      connections.splice(index, 1);
-      updateConnections();
-    });
-    
-    svg.appendChild(line);
-  });
-  drawOscilloscope();
+    svg.querySelectorAll('.arrow-line').forEach(line => line.remove());
 
+    const disconnectThreshold = 200; // distance limit before auto disconnect
+
+    connections = connections.filter(conn => {
+        const startBlock = document.querySelector(`[data-id="${conn.start.block}"]`);
+        const endBlock = document.querySelector(`[data-id="${conn.end.block}"]`);
+        if (!startBlock || !endBlock) return false;
+
+        const startPos = getConnectionPointPosition(startBlock, conn.start.type);
+        const endPos = getConnectionPointPosition(endBlock, conn.end.type);
+
+        // ---- Auto-disconnect if blocks moved too far ----
+        const dx = startPos.x - endPos.x;
+        const dy = startPos.y - endPos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > disconnectThreshold) {
+            return false; // remove this connection
+        }
+
+        // ---- Create CURVED arrow instead of straight line ----
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'arrow-line');
+
+        // Control point for curve (midpoint + offset)
+        const mx = (startPos.x + endPos.x) / 2;
+        const my = (startPos.y + endPos.y) / 2;
+        const curveOffset = 40; // curvature strength
+
+        const cx = mx;
+        const cy = my - curveOffset;
+
+        const d = `M ${startPos.x} ${startPos.y} Q ${cx} ${cy} ${endPos.x} ${endPos.y}`;
+        path.setAttribute("d", d);
+
+        svg.appendChild(path);
+        return true; // keep this connection
+    });
+
+    drawOscilloscope();
 }
+
 
 function isPsdConnected() {
   // true if there is a connection from Line Encoder (output) to PSD (input)
@@ -242,6 +254,73 @@ for (let i = 0; i < 11; i++) {
     bitsShown: 8,
     amplitude: 5
   });
+}
+
+// --- Compare mode globals ---
+let compareMode = false;
+let compareA = 1; // channel index for first technique
+let compareB = 2; // channel index for second technique
+
+const CHANNEL_LABELS = {
+  1: 'Unipolar NRZ',
+  2: 'Unipolar RZ',
+  3: 'Polar NRZ',
+  4: 'Polar RZ',
+  5: 'Bipolar AMI',
+  6: 'Pseudo Ternary',
+  7: 'Manchester',
+  8: 'HDB3',
+  9: 'B8ZS'
+};
+
+function enterCompareMode() {
+  // Require the encoder -> oscilloscope connection to be present for compare
+  if (!isScopeConnected()) {
+    alert('Please connect the Line Encoder output to the Virtual Oscilloscope before using COMPARE.');
+    return;
+  }
+
+  compareMode = true;
+  document.getElementById('compareControls').style.display = 'flex';
+  // visually deactivate channel buttons while in compare mode
+  document.querySelectorAll('.channel-selector .channel-btn').forEach(btn => btn.classList.remove('active'));
+  drawOscilloscope();
+}
+
+function showCompare() {
+  const a = parseInt(document.getElementById('compareSelectA').value, 10);
+  const b = parseInt(document.getElementById('compareSelectB').value, 10);
+  if (a === b) {
+    alert('Please select two different line coding techniques to compare.');
+    return;
+  }
+  compareA = a;
+  compareB = b;
+  drawOscilloscope();
+}
+
+function closeCompare() {
+  compareMode = false;
+  document.getElementById('compareControls').style.display = 'none';
+  // reselect currently active channel button
+  const buttons = document.querySelectorAll('.channel-selector .channel-btn');
+  buttons.forEach((btn, idx) => btn.classList.toggle('active', idx === currentChannel));
+  drawOscilloscope();
+}
+
+function getEncodedByChannel(channel, bits, amp) {
+  switch (channel) {
+    case 1: return generateUnipolarNRZ(bits, amp);
+    case 2: return generateUnipolarRZ(bits, amp);
+    case 3: return generatePolarNRZ(bits, amp);
+    case 4: return generatePolarRZ(bits, amp);
+    case 5: return generateBipolarAMI(bits, amp);
+    case 6: return generatePseudoTernary(bits, amp);
+    case 7: return generateManchester(bits, amp);
+    case 8: return generateHDB3(bits, amp);
+    case 9: return generateB8ZS(bits, amp);
+    default: return generateUnipolarNRZ(bits, amp);
+  }
 }
 
 function updateControlsDisplay() {
@@ -643,16 +722,15 @@ function drawOscilloscope() {
 
     Plotly.purge("oscilloscope");
     return;
-  }
-    const oscilloscopeBox = document.querySelector('.oscilloscope');
-    if (oscilloscopeBox) oscilloscopeBox.style.display = "block";
+}
+const oscilloscopeBox = document.querySelector('.oscilloscope');
+if (oscilloscopeBox) oscilloscopeBox.style.display = "block";
 
+  scopeDisplay.style.display = "block";
+  controlsSection.style.display = "grid";
+  channelSelector.style.display = "flex";
+  inputSection.style.opacity = "1";
 
-  // --- IF CONNECTED, SHOW EVERYTHING NORMAL ---
-  if (scopeDisplay) scopeDisplay.style.display = "block";
-  if (controlsSection) controlsSection.style.display = "grid";
-  if (channelSelector) channelSelector.style.display = "flex";
-  if (inputSection) inputSection.style.opacity = "1";
 
   const settings = channelSettings[currentChannel];
   const bits = repeatPattern(binaryInput, settings.bitsShown);
@@ -660,18 +738,75 @@ function drawOscilloscope() {
   const inputSignal = generateInputSignal(bits);
   let encodedSignal = null;
 
-  if (currentChannel !== 0) {
-    switch (currentChannel) {
-      case 1: encodedSignal = generateUnipolarNRZ(bits, settings.amplitude); break;
-      case 2: encodedSignal = generateUnipolarRZ(bits, settings.amplitude); break;
-      case 3: encodedSignal = generatePolarNRZ(bits, settings.amplitude); break;
-      case 4: encodedSignal = generatePolarRZ(bits, settings.amplitude); break;
-      case 5: encodedSignal = generateBipolarAMI(bits, settings.amplitude); break;
-      case 6: encodedSignal = generatePseudoTernary(bits, settings.amplitude); break;
-      case 7: encodedSignal = generateManchester(bits, settings.amplitude); break;
-      case 8: encodedSignal = generateHDB3(bits, settings.amplitude); break;
-      case 9: encodedSignal = generateB8ZS(bits, settings.amplitude); break;
-    }
+  // --- Ensure encodedSignal is generated for single-channel mode ---
+  if (!compareMode && currentChannel !== 0) {
+    encodedSignal = getEncodedByChannel(currentChannel, bits, settings.amplitude);
+  }
+
+  // If compare mode is active, generate two encoded signals and draw both outputs
+  if (compareMode) {
+    const a = compareA;
+    const b = compareB;
+    const encodedA = getEncodedByChannel(a, bits, settings.amplitude);
+    const encodedB = getEncodedByChannel(b, bits, settings.amplitude);
+
+    const timeInput = createTimeArray(inputSignal, settings.bitsShown, 0);
+    const timeA = createTimeArray(encodedA, settings.bitsShown, 0);
+    const timeB = createTimeArray(encodedB, settings.bitsShown, 0);
+
+    const tracesCompare = [];
+    tracesCompare.push({
+      x: timeInput,
+      y: inputSignal,
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: '#4a9eff', width: 2.5, shape: 'hv' },
+      name: 'Input (Vi)',
+      xaxis: 'x',
+      yaxis: 'y'
+    });
+
+    tracesCompare.push({
+      x: timeA,
+      y: encodedA,
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: '#ff9933', width: 2.5, shape: 'hv' },
+      name: CHANNEL_LABELS[a] + ' (Vo)',
+      xaxis: 'x',
+      yaxis: 'y2'
+    });
+
+    tracesCompare.push({
+      x: timeB,
+      y: encodedB,
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: '#33ff99', width: 2.5, shape: 'hv' },
+      name: CHANNEL_LABELS[b] + ' (Vo)',
+      xaxis: 'x',
+      yaxis: 'y2'
+    });
+
+    const layoutCompare = {
+      paper_bgcolor: '#0f0f17',
+      plot_bgcolor: '#0f0f17',
+      margin: { l: 65, r: 20, t: 40, b: 40 },
+      xaxis: { title: 'Time (s)', showgrid: true, gridcolor: '#222', zerolinecolor: '#555', color: '#aaa', domain: [0.08, 0.98], anchor: 'y' },
+      yaxis: { title: ' input Vi (V)', domain: [0.55, 1.00], range: [-1, 6], showgrid: true, gridcolor: '#333', zerolinecolor: '#777', color: '#9ec7ff' },
+      yaxis2: { title: 'Encoder output Vo (V)', domain: [0.05, 0.50], range: [-12, 12], showgrid: true, gridcolor: '#333', zerolinecolor: '#777', color: '#ffbf80', anchor: 'x' },
+      showlegend: true,
+      legend: { x: 0.98, y: 1.02, xanchor: 'right', font: { color: '#ddd' } },
+      title: { text: 'Compare: ' + CHANNEL_LABELS[a] + ' vs ' + CHANNEL_LABELS[b], font: { color: '#ddd', size: 12 } }
+    };
+
+    Plotly.newPlot('oscilloscope', tracesCompare, layoutCompare, { displayModeBar: true, responsive: true });
+
+    // Hide PSD while in compare mode
+    const psdSectionCmp = document.getElementById('psdSection');
+    if (psdSectionCmp) psdSectionCmp.style.display = 'none';
+
+    return;
   }
 
   const timeInput = createTimeArray(inputSignal, settings.bitsShown, 0);
@@ -771,7 +906,7 @@ function drawOscilloscope() {
       anchor: 'y'
     },
     yaxis: {
-      title: 'Vi (V)',
+      title: ' input Vi (V)',
       domain: [0.55, 1.00],
       range: [-1, 6],
       showgrid: true,
@@ -782,7 +917,7 @@ function drawOscilloscope() {
       titlefont: { color: '#9ec7ff' }
     },
     yaxis2: {
-      title: 'Vo (V)',
+      title: 'Encoder output Vo (V)',
       domain: [0.05, 0.50],
       range: [-12, 12],
       showgrid: true,
@@ -795,7 +930,7 @@ function drawOscilloscope() {
     },
     showlegend: true,
     legend: { x: 0.98, y: 1.02, xanchor: 'right', font: { color: '#ddd' } },
-    title: { text: 'Oscilloscope (upper: Input, lower: Output)', font: { color: '#ddd', size: 16 } }
+    title: { text: 'Oscilloscope (upper: Input, lower: Output)', font: { color: '#ddd', size: 10 } ,family:'monospace'}
   };
 
   // Bit annotations (unchanged)
@@ -814,7 +949,7 @@ function drawOscilloscope() {
 
   layout.annotations = annotations;
 if (encodedSignal) {
-  const arrowColor = '#ffeb3b';
+  const arrowColor = '#ffffffff';
 
   // Manchester transitions
   if (currentChannel === 7 && encodedSignal.length === settings.bitsShown * 2) {
@@ -832,7 +967,7 @@ if (encodedSignal) {
         yref: 'y2',
         text: arrowSymbol,
         showarrow: false,
-        font: { color: arrowColor, size: 20, family: 'monospace' },
+        font: { color: arrowColor, size: 30, family: 'monospace' },
         align: 'center'
       });
     }
@@ -854,7 +989,7 @@ if (encodedSignal) {
           yref: 'y2',
           text: arrowSymbol,
           showarrow: false,
-          font: { color: arrowColor, size: 18, family: 'monospace' },
+          font: { color: arrowColor, size: 30, family: 'monospace' },
           align: 'center'
         });
       }
@@ -878,7 +1013,7 @@ if (encodedSignal) {
           yref: 'y2',
           text: arrowSymbol,
           showarrow: false,
-          font: { color: arrowColor, size: 18, family: 'monospace' },
+          font: { color: arrowColor, size: 30, family: 'monospace' },
           align: 'center'
         });
       }
@@ -901,7 +1036,7 @@ if (encodedSignal) {
           yref: 'y2',
           text: arrowSymbol,
           showarrow: false,
-          font: { color: arrowColor, size: 18, family: 'monospace' },
+          font: { color: arrowColor, size: 30, family: 'monospace' },
           align: 'center'
         });
       }
@@ -924,7 +1059,7 @@ if (encodedSignal) {
           yref: 'y2',
           text: arrowSymbol,
           showarrow: false,
-          font: { color: arrowColor, size: 18, family: 'monospace' },
+          font: { color: arrowColor, size: 30, family: 'monospace' },
           align: 'center'
         });
       }
@@ -947,7 +1082,7 @@ if (encodedSignal) {
           yref: 'y2',
           text: arrowSymbol,
           showarrow: false,
-          font: { color: arrowColor, size: 18, family: 'monospace' },
+          font: { color: arrowColor, size: 30, family: 'monospace' },
           align: 'center'
         });
       }
@@ -1071,79 +1206,193 @@ if (isPsdConnected() && currentChannel !== 0 && encodedSignal) {
 
     psdSection.style.display = 'block';
 
-    // -------- PRACTICAL PSD (FFT) -------
-    const { freq, psd } = computePSD(encodedSignal);
 
-    const practicalTrace = {
-        x: freq,
-        y: psd,
-        type: 'scatter',
-        mode: 'lines',
-        line: { width: 3, color: '#ffcc66' },
-        name: "Practical PSD"
-    };
+    /* ============================================================
+          SIMPLE FFT FOR PLOT.JS (No external libs required)
+       ============================================================ */
 
-    const practicalLayout = {
-        paper_bgcolor: '#0f0f17',
-        plot_bgcolor: '#0f0f17',
-        margin: { l:60, r:20, t:30, b:40 },
-        xaxis: { title: 'Frequency', color:'#aaa', gridcolor:'#222' },
-        yaxis: { title: 'Power', color:'#ddd', gridcolor:'#333' },
-        title: { text:'Practical PSD (FFT)', font:{color:'white'} }
-    };
+    /* ============================================================
+                SMOOTH PRACTICAL PSD (FFT)
+   ============================================================ */
 
-    Plotly.newPlot('practicalPSD', [practicalTrace], practicalLayout);
+function smoothFFT(signal) {
+    let N = signal.length;
 
+    // ---- Zero-padding (critical for smoothing) ----
+    let P = 4096;   // or 8192 for even smoother plot
 
-    // ---------- THEORETICAL PSD ----------
-    let theoFreq = [];
-    let theoPSD  = [];
+    let padded = new Array(P).fill(0);
+    for (let i = 0; i < N; i++) padded[i] = signal[i];
 
-    for (let f = -2; f <= 2; f += 0.01) {
-        theoFreq.push(f);
+    let re = new Array(P).fill(0);
+    let im = new Array(P).fill(0);
 
-        if (currentChannel === 1) {
-            // Unipolar NRZ
-            theoPSD.push(Math.pow(Math.sin(Math.PI*f)/(Math.PI*f), 2));
-        }
-        else if (currentChannel === 2) {
-            // Unipolar RZ
-            let sinc = Math.sin(Math.PI*f)/(Math.PI*f);
-            theoPSD.push(0.25 * sinc*sinc);
-        }
-        else {
-            // default fallback
-            theoPSD.push(Math.pow(Math.sin(Math.PI*f)/(Math.PI*f), 2));
+    // ---- FFT (manual DFT for now) ----
+    for (let k = 0; k < P; k++) {
+        for (let n = 0; n < P; n++) {
+            let angle = (-2 * Math.PI * k * n) / P;
+            re[k] += padded[n] * Math.cos(angle);
+            im[k] += padded[n] * Math.sin(angle);
         }
     }
 
-    const theoryTrace = {
-        x: theoFreq,
-        y: theoPSD,
-        type: 'scatter',
-        mode: 'lines',
-        line: { width:2, color:'cyan', dash:'dot' },
-        name:"Theoretical PSD"
-    };
+    // ---- Only positive spectrum ----
+    let psd = [];
+    let freq = [];
 
-    const theoryLayout = {
-        paper_bgcolor: '#0f0f17',
-        plot_bgcolor: '#0f0f17',
-        margin: { l:60, r:20, t:30, b:40 },
-        xaxis: { title: 'Frequency', color:'#aaa', gridcolor:'#222' },
-        yaxis: { title: 'Power', color:'#ddd', gridcolor:'#333' },
-        title: { text:'Theoretical PSD', font:{color:'white'} }
-    };
+    for (let k = 0; k < P/2; k++) {
+        let mag = (re[k]*re[k] + im[k]*im[k]) / P;
+        psd.push(mag);
+        freq.push(k);
+    }
 
-    Plotly.newPlot('theoryPSD', [theoryTrace], theoryLayout);
-
-}
-else {
-    psdSection.style.display = 'none';
-    Plotly.purge('theoryPSD');
-    Plotly.purge('practicalPSD');
+    return { freq, psd };
 }
 
+const { freq, psd } = smoothFFT(encodedSignal);
+
+Plotly.newPlot("practicalPSD", [{
+    x: freq,
+    y: psd,
+    mode: "lines",
+    line: { 
+        width: 2,
+        simplify: false   // <-- REQUIRED for smooth curve
+    }
+}], {
+    title: "Practical PSD (Smooth FFT)",
+    paper_bgcolor: "#0f0f17",
+    plot_bgcolor: "#0f0f17",
+    xaxis: { title: "Frequency Index", color: "#aaa" },
+    yaxis: { title: "Magnitude", color: "#ddd" }
+});
+
+
+
+    /* ============================================================
+                     THEORETICAL PSD
+       ============================================================ */
+
+    /* ============================
+      THEORETICAL PSD
+   ============================ */
+
+/* ============================================================
+                 THEORETICAL PSD  (Corrected)
+   ============================================================ */
+
+function sinc(x) {
+    return x === 0 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x);
+}
+
+// Line coding names for plot title
+const lineCodingNames = {
+    1: "Unipolar NRZ",
+    2: "Unipolar RZ (50%)",
+    3: "Polar NRZ",
+    4: "Polar RZ (50%)",
+    5: "Bipolar AMI",
+    7: "Manchester",
+    6: "Pseudo Ternary",
+    8: "HDB3",
+    9: "B8ZS"
+};
+
+let theoFreq = [];
+let theoPSD = [];
+
+for (let f = -3; f <= 3; f += 0.01) {
+    theoFreq.push(f);
+    let S = 0;
+
+    switch (currentChannel) {
+
+        case 1:  // Unipolar NRZ
+            // S(f) = sinc^2(f)
+            S = Math.pow(sinc(f), 2);
+            break;
+
+        case 2:  // Unipolar RZ (50% duty cycle)
+            // Width = T/2 → sinc(f/2)
+            S = Math.pow(sinc(f / 2), 2);
+            break;
+
+        case 3:  // Polar NRZ
+            // ±A → amplitude doubles → 4 * sinc^2(f)
+            S = 4 * Math.pow(sinc(f), 2);
+            break;
+
+        case 4:  // Polar RZ (50% duty)
+            // Same shape as unipolar RZ, but amplitude doubled
+            S = 4 * Math.pow(sinc(f / 2), 2);
+            break;
+
+        case 7:  // Manchester (correct formula)
+            /*
+               Standard Manchester spectrum:
+               S(f) = (1/2) * sinc^2(f/2) * sin^2(πf)
+               - Zero at DC
+               - Much wider main lobe
+            */
+            S = 0.5 * Math.pow(sinc(f / 2), 2) * Math.pow(Math.sin(Math.PI * f), 2);
+            break;
+
+        case 5:  // AMI / Bipolar
+            /*
+               S(f) = 4 * sinc^2(f) * sin^2(πf)
+               - Zero at DC
+               - Strong nulls at integer frequencies
+            */
+            S = 4 * Math.pow(sinc(f), 2) * Math.pow(Math.sin(Math.PI * f), 2);
+            break;
+        case 6: // Pseudo Ternary
+            /*
+               S(f) = 4 * sinc^2(f) * sin^2(πf)
+               - Zero at DC
+               - Strong nulls at integer frequencies
+            */
+            S = 4 * Math.pow(sinc(f), 2) * Math.pow(Math.sin(Math.PI * f), 2);
+            break;
+        case 8:  // HDB3
+    
+            S = 4 * Math.pow(sinc(f), 2) *
+            Math.pow(Math.sin(Math.PI * f), 2) *
+            (1 + 0.6 * Math.cos(2 * Math.PI * f));
+            break;
+        case 9:  // B8ZS
+            S = 4 * Math.pow(sinc(f), 2) *
+            Math.pow(Math.sin(Math.PI * f), 2) *
+            (1 + 0.85 * Math.cos(2 * Math.PI * f));
+            break;
+        default:
+            S = Math.pow(sinc(f), 2);
+        
+    }
+
+    theoPSD.push(S);
+}
+
+Plotly.newPlot("theoryPSD", [{
+    x: theoFreq,
+    y: theoPSD,
+    mode: "lines",
+    line: { width: 2, color: "cyan", dash: "dot" }
+}], {
+    title: "Theoretical PSD – " + lineCodingNames[currentChannel],
+    paper_bgcolor: "#0f0f17",
+    plot_bgcolor: "#0f0f17",
+    xaxis: { title: "Frequency (Normalized)", color: "#aaa" },
+    yaxis: { title: "PSD", color: "#ddd" }
+});
+
+
+
+
+} else {
+    psdSection.style.display = "none";
+    Plotly.purge("practicalPSD");
+    Plotly.purge("theoryPSD");
+}
 }
 
 // -------------------- Pre-Test & Post-Test --------------------
@@ -1552,6 +1801,3 @@ document.addEventListener('click', (e) => {
     }, 50);
   }
 });
-
-
-
